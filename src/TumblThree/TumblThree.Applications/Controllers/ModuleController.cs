@@ -97,6 +97,7 @@ namespace TumblThree.Applications.Controllers
 
         public void Shutdown()
         {
+            DetailsController.Shutdown();
             QueueController.Shutdown();
             ManagerController.Shutdown();
 
