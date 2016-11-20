@@ -387,14 +387,14 @@ namespace TumblThree.Applications.Controllers
                                 fileName = currentImageUrl.Item1.Split('/').Last();
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), fileName);
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedPhotos))
+                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedPhotos, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item1);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedPhotos = (uint)downloadedPhotos;
                                     }
                                     if (shellService.Settings.EnablePreview)
@@ -405,14 +405,14 @@ namespace TumblThree.Applications.Controllers
                                 fileName = currentImageUrl.Item1.Split('/').Last();
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), fileName);
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedVideos))
+                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedVideos, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item1);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedVideos = (uint)downloadedVideos;
                                     }
                                     if (shellService.Settings.EnablePreview)
@@ -422,14 +422,14 @@ namespace TumblThree.Applications.Controllers
                             case "Audio":
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), currentImageUrl.Item3 + ".mp3");
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedAudios))
+                                if (Download(blog, fileLocation, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedAudios, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item1);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedAudios = (uint)downloadedAudios;
                                     }
                                 }
@@ -437,14 +437,14 @@ namespace TumblThree.Applications.Controllers
                             case "Text":
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameTexts));
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedTexts))
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedTexts, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item3);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedTexts = (uint)downloadedTexts;
                                     }
                                 }
@@ -452,14 +452,14 @@ namespace TumblThree.Applications.Controllers
                             case "Quote":
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameQuotes));
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedQuotes))
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedQuotes, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item3);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedQuotes = (uint)downloadedQuotes;
                                     }
                                 }
@@ -467,14 +467,14 @@ namespace TumblThree.Applications.Controllers
                             case "Link":
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameLinks));
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedLinks))
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedLinks, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item3);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedLinks = (uint)downloadedLinks;
                                     }
                                 }
@@ -482,14 +482,14 @@ namespace TumblThree.Applications.Controllers
                             case "Conversation":
                                 fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameConversations));
 
-                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedConversations))
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedConversations, ref downloadedImages))
                                 {
                                     lock (lockObjectProgress)
                                     {
                                         blog.Links.Add(currentImageUrl.Item3);
                                         // could be moved out of the lock?
-                                        blog.DownloadedImages = (uint)blog.Links.Count();
-                                        blog.Progress = (uint)((double)blog.DownloadedImages / (double)blog.TotalCount * 100);
+                                        blog.DownloadedImages = (uint)downloadedImages;
+                                        blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedConversations = (uint)downloadedConversations;
                                     }
                                 }
@@ -1187,13 +1187,14 @@ namespace TumblThree.Applications.Controllers
             return null;
         }
 
-        private bool Download(TumblrBlog blog, string fileLocation, string url, IProgress<DataModels.DownloadProgress> progress, object lockObject, bool locked, ref int counter)
+        private bool Download(TumblrBlog blog, string fileLocation, string url, IProgress<DataModels.DownloadProgress> progress, object lockObject, bool locked, ref int counter, ref int totalCounter)
         {
             Monitor.Enter(lockObject, ref locked);
             if (blog.Links.Contains(url))
             {
+                counter++;
+                totalCounter++;
                 Monitor.Exit(lockObject);
-                Interlocked.Increment(ref counter);
                 return false;
             }
             else
@@ -1208,6 +1209,7 @@ namespace TumblThree.Applications.Controllers
                     using (var stream = ThrottledStream.ReadFromURLIntoStream(url, (shellService.Settings.Bandwidth / shellService.Settings.ParallelImages), shellService.Settings.TimeOut))
                         ThrottledStream.SaveStreamToDisk(stream, fileLocation);
                     Interlocked.Increment(ref counter);
+                    Interlocked.Increment(ref totalCounter);
                     return true;
                 }
                 catch
@@ -1217,13 +1219,14 @@ namespace TumblThree.Applications.Controllers
             }
         }
 
-        private bool Download(TumblrBlog blog, string fileLocation, string postId, string text, IProgress<DataModels.DownloadProgress> progress, object lockObject, bool locked, ref int counter)
+        private bool Download(TumblrBlog blog, string fileLocation, string postId, string text, IProgress<DataModels.DownloadProgress> progress, object lockObject, bool locked, ref int counter, ref int totalCounter)
         {
             Monitor.Enter(lockObject, ref locked);
             if (blog.Links.Contains(postId))
             {
+                counter++;
+                totalCounter++;
                 Monitor.Exit(lockObject);
-                Interlocked.Increment(ref counter);
                 return false;
             }
             else
@@ -1240,6 +1243,7 @@ namespace TumblThree.Applications.Controllers
                         sw.WriteLine(text);
                     }
                     Interlocked.Increment(ref counter);
+                    Interlocked.Increment(ref totalCounter);
                     return true;
                 }
                 catch
