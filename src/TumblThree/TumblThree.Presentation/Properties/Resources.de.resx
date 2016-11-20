@@ -379,7 +379,7 @@
     <value>Vorschau:</value>
   </data>
   <data name="Bandwidth" xml:space="preserve">
-    <value>Bandbreite</value>
+    <value>Bandbreite begrenzen (kb/s)</value>
   </data>
   <data name="DetailsProgress" xml:space="preserve">
     <value>{0} von {1}</value>
