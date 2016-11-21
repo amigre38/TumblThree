@@ -353,6 +353,9 @@ namespace TumblThree.Applications.Controllers
             int downloadedQuotes = (int)blog.DownloadedQuotes;
             int downloadedLinks = (int)blog.DownloadedLinks;
             int downloadedConversations = (int)blog.DownloadedConversations;
+            int downloadedMetaPhotos = 0;
+            int downloadedMetaVideos = 0;
+            int downloadedMetaAudios = 0;
 
             object lockObjectProgress = new object();
             object lockObjectDownload = new object();
@@ -491,6 +494,39 @@ namespace TumblThree.Applications.Controllers
                                         blog.DownloadedImages = (uint)downloadedImages;
                                         blog.Progress = (uint)((double)downloadedImages / (double)blog.TotalCount * 100);
                                         blog.DownloadedConversations = (uint)downloadedConversations;
+                                    }
+                                }
+                                break;
+                            case "PhotoMeta":
+                                fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameMetaPhoto));
+
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedMetaPhotos, ref downloadedMetaPhotos))
+                                {
+                                    lock (lockObjectProgress)
+                                    {
+                                        blog.Links.Add(currentImageUrl.Item3);
+                                    }
+                                }
+                                break;
+                            case "VideoMeta":
+                                fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameMetaVideo));
+
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedMetaVideos, ref downloadedMetaVideos))
+                                {
+                                    lock (lockObjectProgress)
+                                    {
+                                        blog.Links.Add(currentImageUrl.Item3);
+                                    }
+                                }
+                                break;
+                            case "AudioMeta":
+                                fileLocation = Path.Combine(Path.Combine(blogPath, blog.Name), string.Format(CultureInfo.CurrentCulture, Resources.FileNameMetaAudio));
+
+                                if (Download(blog, fileLocation, currentImageUrl.Item3, currentImageUrl.Item1, progress, lockObjectDownload, locked, ref downloadedMetaAudios, ref downloadedMetaAudios))
+                                {
+                                    lock (lockObjectProgress)
+                                    {
+                                        blog.Links.Add(currentImageUrl.Item3);
                                     }
                                 }
                                 break;
@@ -828,6 +864,9 @@ namespace TumblThree.Applications.Controllers
             blog.DownloadQuote = shellService.Settings.DownloadQuotes;
             blog.DownloadConversation = shellService.Settings.DownloadConversations;
             blog.DownloadLink = shellService.Settings.DownloadLinks;
+            blog.CreatePhotoMeta = shellService.Settings.CreateImageMeta;
+            blog.CreateVideoMeta = shellService.Settings.CreateVideoMeta;
+            blog.CreateAudioMeta = shellService.Settings.CreateAudioMeta;
             blog.SkipGif = shellService.Settings.SkipGif;
 
             blog = await GetMetaInformation(blog);
@@ -905,7 +944,7 @@ namespace TumblThree.Applications.Controllers
         {
             int totalPosts = 0;
             int numberOfPostsCrawled = 0;
-            uint totalImages;
+            int totalDownloads = 0;
             int photos = 0;
             int videos = 0;
             int audio = 0;
@@ -966,6 +1005,7 @@ namespace TumblThree.Applications.Controllers
                                                 var imageUrl = photo.alt_sizes.ElementAt(shellService.Settings.ImageSizes.IndexOf(shellService.Settings.ImageSize.ToString())).url;
                                                 if (blog.SkipGif == true && imageUrl.EndsWith(".gif"))
                                                     continue;
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(imageUrl, "Photo", post.id.ToString()));
                                                 Monitor.Exit(images);
@@ -978,12 +1018,14 @@ namespace TumblThree.Applications.Controllers
                                         {
                                             if (shellService.Settings.VideoSize == 1080)
                                             {
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(post.video_url, "Video", post.id.ToString()));
                                                 Monitor.Exit(images);
                                             }
                                             if (shellService.Settings.VideoSize == 480)
                                             {
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(post.video_url.Insert(post.video_url.LastIndexOf("."), "_480"), "Video", post.id.ToString()));
                                                 Monitor.Exit(images);
@@ -994,6 +1036,7 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("audio")))
                                         {
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(post.audio_source_url, "Audio", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1003,8 +1046,15 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("text")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Title: " + post.title + Environment.NewLine + post.body + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Title: " + post.title +
+                                                Environment.NewLine + "Body: " + post.body +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Text", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1014,8 +1064,15 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("quote")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Quote: " + post.text + Environment.NewLine + post.source + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Quote: " + post.text +
+                                                Environment.NewLine + "Source: " + post.source +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Quote", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1025,8 +1082,16 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("link")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Link: " + post.title + Environment.NewLine + post.url + Environment.NewLine + post.description + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Link: " + post.title +
+                                                Environment.NewLine + "Source: " + post.url +
+                                                Environment.NewLine + "Description: " + post.description +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Link", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1036,10 +1101,79 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("chat")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Conversation: " + post.body + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Conversation: " + post.body +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Conversation", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreatePhotoMeta == true)
+                                    {
+                                        foreach (Datamodels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("photo")))
+                                        {
+                                            string imageUrl = "";
+                                            List<string> imageUrls = new List<string>();
+                                            foreach (DataModels.Json.Photo photo in post.photos)
+                                            {
+                                                var singleImageUrl = photo.alt_sizes.ElementAt(shellService.Settings.ImageSizes.IndexOf(shellService.Settings.ImageSize.ToString())).url;
+                                                if (blog.SkipGif == true && imageUrl.EndsWith(".gif"))
+                                                    continue;
+
+                                                imageUrls.Add(singleImageUrl);
+                                            }
+                                            // imageUrl = imageUrls.Aggregate((current, next) => current + ", " + next);
+                                            imageUrl = string.Join(", ", imageUrls.ToArray());
+
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Photo Caption: " + post.caption +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "PhotoMeta", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreateVideoMeta == true)
+                                    {
+                                        foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("video")))
+                                        {
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Videourl: " + post.video_url +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "VideoMeta", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreateAudioMeta == true)
+                                    {
+                                        foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.type.Equals("audio")))
+                                        {
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Audio caption: " + post.caption +
+                                                Environment.NewLine + "Id3: artist: " + post.artist +
+                                                Environment.NewLine + "Id3: title: " + post.title +
+                                                Environment.NewLine + "Id3: track: " + post.track +
+                                                Environment.NewLine + "Id3: album: " + post.album +
+                                                Environment.NewLine + "Id3: year: " + post.year +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "AudioMeta", post.id.ToString()));
                                             Monitor.Exit(images);
                                         }
                                     }
@@ -1066,6 +1200,7 @@ namespace TumblThree.Applications.Controllers
                                                 var imageUrl = photo.alt_sizes.ElementAt(shellService.Settings.ImageSizes.IndexOf(shellService.Settings.ImageSize.ToString())).url;
                                                 if (blog.SkipGif == true && imageUrl.EndsWith(".gif"))
                                                     continue;
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(imageUrl, "Photo", post.id.ToString()));
                                                 Monitor.Exit(images);
@@ -1078,12 +1213,14 @@ namespace TumblThree.Applications.Controllers
                                         {
                                             if (shellService.Settings.VideoSize == 1080)
                                             {
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(post.video_url, "Video", post.id.ToString()));
                                                 Monitor.Exit(images);
                                             }
                                             if (shellService.Settings.VideoSize == 480)
                                             {
+                                                Interlocked.Increment(ref totalDownloads);
                                                 Monitor.Enter(images);
                                                 images.Add(Tuple.Create(post.video_url.Insert(post.video_url.LastIndexOf("."), "_480"), "Video", post.id.ToString()));
                                                 Monitor.Exit(images);
@@ -1094,6 +1231,7 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("audio")))
                                         {
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(post.audio_source_url, "Audio", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1103,8 +1241,15 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("text")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Title: " + post.title + Environment.NewLine + post.body + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Title: " + post.title +
+                                                Environment.NewLine + "Body: " + post.body +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Text", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1114,8 +1259,15 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("quote")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Quote: " + post.text + Environment.NewLine + post.source + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Quote: " + post.text +
+                                                Environment.NewLine + "Source: " + post.source +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Quote", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1125,8 +1277,16 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("link")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Link: " + post.title + Environment.NewLine + post.url + Environment.NewLine + post.description + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Link: " + post.title +
+                                                Environment.NewLine + "Source: " + post.url +
+                                                Environment.NewLine + "Description: " + post.description +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Link", post.id.ToString()));
                                             Monitor.Exit(images);
@@ -1136,10 +1296,79 @@ namespace TumblThree.Applications.Controllers
                                     {
                                         foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("chat")))
                                         {
-                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date + Environment.NewLine + "Conversation: " + post.body + Environment.NewLine;
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Conversation: " + post.body +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", post.tags.ToArray()) +
+                                                Environment.NewLine;
 
+                                            Interlocked.Increment(ref totalDownloads);
                                             Monitor.Enter(images);
                                             images.Add(Tuple.Create(textBody, "Conversation", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreatePhotoMeta == true)
+                                    {
+                                        foreach (Datamodels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("photo")))
+                                        {
+                                            string imageUrl = "";
+                                            List<string> imageUrls = new List<string>();
+                                            foreach (DataModels.Json.Photo photo in post.photos)
+                                            {
+                                                var singleImageUrl = photo.alt_sizes.ElementAt(shellService.Settings.ImageSizes.IndexOf(shellService.Settings.ImageSize.ToString())).url;
+                                                if (blog.SkipGif == true && imageUrl.EndsWith(".gif"))
+                                                    continue;
+
+                                                imageUrls.Add(singleImageUrl);
+                                            }
+                                            // imageUrl = imageUrls.Aggregate((current, next) => current + ", " + next);
+                                            imageUrl = string.Join(", ", imageUrls.ToArray());
+
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Photo Caption: " + post.caption +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "PhotoMeta", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreateVideoMeta == true)
+                                    {
+                                        foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("video")))
+                                        {
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Videourl: " + post.video_url +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "VideoMeta", post.id.ToString()));
+                                            Monitor.Exit(images);
+                                        }
+                                    }
+                                    if (blog.CreateAudioMeta == true)
+                                    {
+                                        foreach (DataModels.Json.Post post in document.response.posts.Where(posts => posts.tags.Any(tag => tags.Equals(tag)) && posts.type.Equals("audio")))
+                                        {
+                                            string textBody = "Post ID: " + post.id.ToString() + ", Date: " + post.date +
+                                                Environment.NewLine + "Url with slug: " + post.slug +
+                                                Environment.NewLine + "Reblog key: " + post.reblog_key +
+                                                Environment.NewLine + "Audio caption: " + post.caption +
+                                                Environment.NewLine + "Id3: artist: " + post.artist +
+                                                Environment.NewLine + "Id3: title: " + post.title +
+                                                Environment.NewLine + "Id3: track: " + post.track +
+                                                Environment.NewLine + "Id3: album: " + post.album +
+                                                Environment.NewLine + "Id3: year: " + post.year +
+                                                Environment.NewLine + "Tags: " + string.Join(", ", string.Join(", ", post.tags.ToArray())) +
+                                                Environment.NewLine;
+                                            Monitor.Enter(images);
+                                            images.Add(Tuple.Create(textBody, "AudioMeta", post.id.ToString()));
                                             Monitor.Exit(images);
                                         }
                                     }
@@ -1169,8 +1398,7 @@ namespace TumblThree.Applications.Controllers
             blog.Quotes = (uint)quotes;
             blog.NumberOfLinks = (uint)link;
 
-            totalImages = (uint)images.Count;
-            return Tuple.Create(totalImages, images);
+            return Tuple.Create((uint)totalDownloads, images);
         }
 
         public string ExtractBlogname(string url)
