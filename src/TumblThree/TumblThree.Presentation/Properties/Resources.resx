@@ -348,35 +348,17 @@
   <data name="Timer" xml:space="preserve">
     <value>at time (hh:mm:ss)</value>
   </data>
-  <data name="Audios" xml:space="preserve">
-    <value>No. of Audios:</value>
-  </data>
-  <data name="Links" xml:space="preserve">
-    <value>No. of Links:</value>
-  </data>
-  <data name="Photos" xml:space="preserve">
-    <value>No. of Photos:</value>
-  </data>
   <data name="Posts" xml:space="preserve">
-    <value>No. of Posts:</value>
-  </data>
-  <data name="Quotes" xml:space="preserve">
-    <value>No. of Quotes:</value>
+    <value>Number of posts:</value>
   </data>
   <data name="ShowItems" xml:space="preserve">
     <value>Summary of {0} blogs</value>
-  </data>
-  <data name="Texts" xml:space="preserve">
-    <value>No. of Texts:</value>
   </data>
   <data name="SelectABlog" xml:space="preserve">
     <value>Please select a blog</value>
   </data>
   <data name="CopyUrl" xml:space="preserve">
     <value>Copy url</value>
-  </data>
-  <data name="Videos" xml:space="preserve">
-    <value>No. of Videos:</value>
   </data>
   <data name="Conversations" xml:space="preserve">
     <value>No. of Conversations:</value>
@@ -385,7 +367,7 @@
     <value>Preview:</value>
   </data>
   <data name="DetailsProgress" xml:space="preserve">
-    <value>{0} of {1}</value>
+    <value>{0} of {1}, duplicates found: {2}</value>
   </data>
   <data name="DownloadAudios" xml:space="preserve">
     <value>Download audio files</value>
@@ -406,7 +388,7 @@
     <value>Preview on/off</value>
   </data>
   <data name="BlogSettings" xml:space="preserve">
-    <value>Settings applied to each blog upon addition:</value>
+    <value>Blog settings:</value>
   </data>
   <data name="BlogStatistics" xml:space="preserve">
     <value>Blog stats:</value>
@@ -420,14 +402,14 @@
   <data name="ToolTipDetailsStatsDescription" xml:space="preserve">
     <value>Check to download post type or skip during the backup</value>
   </data>
-  <data name="CreateAudioMeta" xml:space="preserve">
-    <value>Save audio meta information</value>
+  <data name="DownloadAudioMeta" xml:space="preserve">
+    <value>Download audio meta</value>
   </data>
-  <data name="CreateImageMeta" xml:space="preserve">
-    <value>Save image meta information</value>
+  <data name="DownloadImageMeta" xml:space="preserve">
+    <value>Download image meta</value>
   </data>
-  <data name="CreateVideoMeta" xml:space="preserve">
-    <value>Save video meta information</value>
+  <data name="DownloadVideoMeta" xml:space="preserve">
+    <value>Download video meta</value>
   </data>
   <data name="MetaAudio" xml:space="preserve">
     <value>Save audio meta</value>
@@ -437,5 +419,17 @@
   </data>
   <data name="MetaVideo" xml:space="preserve">
     <value>Save audio meta</value>
+  </data>
+  <data name="DefaultSettingsForBlogs" xml:space="preserve">
+    <value>Settings applied to each blog upon addition:</value>
+  </data>
+  <data name="DownloadVideosShort" xml:space="preserve">
+    <value>Download videos</value>
+  </data>
+  <data name="ToolTipDefaultSettingsForBlogs" xml:space="preserve">
+    <value>Sets the default settings for newly added blogs.</value>
+  </data>
+  <data name="ToolTipDefaultSettingsForBlogsDescription" xml:space="preserve">
+    <value>The backup uses indivual settings for each blog. To change them, select a blog in the main interface and select the Details window on the right hand side.</value>
   </data>
 </root>
