@@ -5,7 +5,7 @@ using System.Resources;
 
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("TumblThree")]
-[assembly: AssemblyCopyright("Copyright by johanneszab © 2016")]
+[assembly: AssemblyCopyright("Copyright (C) 2016 Johannes Meyer zum Alten Borgloh")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -15,5 +15,5 @@ using System.Resources;
 
 [assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.MainAssembly)]
 
-[assembly: AssemblyVersion("1.0.3.9")]
-[assembly: AssemblyFileVersion("1.0.3.9")]
+[assembly: AssemblyVersion("1.0.4.4")]
+[assembly: AssemblyFileVersion("1.0.4.4")]
